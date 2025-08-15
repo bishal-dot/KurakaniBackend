@@ -19,14 +19,22 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'fullname',
         'username',
         'email',
         'password',
         'gender',
         'age',
         'verification_photo',
-        'is_verified'
+        'profile',
+        'coverphoto', 
+        'purpose', 
+        'job', 
+        'interests', 
+        'education', 
+        'about',
+        'is_verified',
+        'is_admin'
     ];
 
     /**
@@ -49,10 +57,35 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_verified' => 'boolean',
         ];
     }
 
     public function getVerificationPhotoUrlAttribute(){
         return $this->verification_photo ? asset('storage/verification_photos/' . $this->verification_photo) : null;
     }
+
+    public function isAdmin(){
+        return $this->role === 'admin';
+    }
+
+    public function photos(){
+        return $this->hasMany(UserPhoto::class);
+    }
+     public function matches()
+        {
+            return $this->hasMany(MatchProfile::class, 'user_id'); // matches owned by this user
+        }
+
+        public function matchedUsers()
+        {
+            return $this->hasManyThrough(
+                User::class,
+                MatchProfile::class,
+                'user_id', // Foreign key on matches table
+                'id',      // Foreign key on users table
+                'id',      // Local key on users table
+                'matched_user_id' // Local key on matches table
+            );
+        }
 }

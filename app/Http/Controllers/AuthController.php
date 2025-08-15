@@ -2,54 +2,44 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-
 
 class AuthController extends Controller
 {
-    public function register(Request $request){
+    // ---------------- SIGNUP ----------------
+    public function register(Request $request)
+    {
         $request->validate([
-            'name'   => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'gender' => 'required|in:male,female,other',
-            'age' => 'nullable|integer|min:18',
-            'photo_base64' => 'required|string',
         ]);
 
-        $photoData = $request->photo_base64;
-        $photo = base64_decode($photoData);
-
-        $fileName = 'verification_' . Str::random(10) . '.jpg';
-        Storage::disk('public')->put('verification_photos/' . $fileName, $photo);
-
+        // Create user
         $user = User::create([
-            'name' => $request->name,
             'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'gender' => $request->gender,
-            'age' => $request->age,
-            'verification_photo' => $fileName,
-            'is_verified' => false, // Set false if verification pending
         ]);
 
+        // Generate token
         $token = $user->createToken('mobile-token')->plainTextToken;
 
         return response()->json([
             'error' => false,
-            'reason' => 'listed',
-            'response' => $user,
-            'token' => $token
-        ],201);
+            'message' => 'Signup successful',
+            'user' => $user,
+            'token' => $token,
+            'profile_complete' => false,  // Always false after signup
+        ], 201);
     }
 
-    public function login(Request $request){
+    // ---------------- LOGIN ----------------
+    public function login(Request $request)
+    {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string'
@@ -57,46 +47,44 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
-            return response()->json(['message' => 'Invalid email'], 401);
-        }
-
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid password'], 401);
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
         $token = $user->createToken('mobile-token')->plainTextToken;
 
+        $profileComplete = !empty($user->fullname) && !empty($user->gender) && !empty($user->age);
+
         return response()->json([
             'error' => false,
-            'reason' => 'listed',
-            'response' => $user,
+            'message' => 'Login successful',
+            'user' => $user,
             'token' => $token,
+            'profile_complete' => $profileComplete
         ]);
-    
     }
 
-     public function me(Request $request)
+    // ---------------- CURRENT USER ----------------
+    public function me(Request $request)
     {
         return response()->json($request->user());
     }
 
+    // ---------------- LOGOUT ----------------
     public function logout(Request $request)
     {
-         $user = $request->user();
-    if ($user) {
-        $user->tokens()->delete();
-        return response()->json([
-            'error' => false,
-            'reason' => 'success',
-            'response' => null
-        ]);
-    }
+        $user = $request->user();
+        if ($user) {
+            $user->tokens()->delete();
+            return response()->json([
+                'error' => false,
+                'message' => 'Logged out successfully',
+            ]);
+        }
 
-    return response()->json([
-        'error' => true,
-        'reason' => 'User not authenticated',
-        'response' => null
-    ], 401);
+        return response()->json([
+            'error' => true,
+            'message' => 'User not authenticated',
+        ], 401);
     }
 }

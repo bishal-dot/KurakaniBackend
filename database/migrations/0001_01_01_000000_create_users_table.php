@@ -13,15 +13,23 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('fullname')->nullable(); 
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('gender');
-            $table->integer('age')->nullable();
+            $table->enum('gender',['male','female'])->nullable();
+            $table->unsignedSmallInteger('age')->nullable();
             $table->string('verification_photo')->nullable();
+            $table->string('profile')->nullable();
+            $table->string('coverphoto')->nullable();
+            $table->string('purpose')->nullable();
+            $table->string('job')->nullable();
+            $table->text('interests')->nullable(); // could be JSON
+            $table->string('education')->nullable();
+            $table->text('about')->nullable();
             $table->boolean('is_verified')->default(false);
+            $table->boolean('is_admin')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });
@@ -39,6 +47,20 @@ return new class extends Migration
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
+        });
+
+        Schema::create('user_photos', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('photo_path'); // store file path
+            $table->timestamps();
+        });
+
+        Schema::create('matches', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();  // user who owns the match
+            $table->foreignId('matched_user_id')->constrained('users')->cascadeOnDelete(); // the matched user
+            $table->timestamps();
         });
     }
 
