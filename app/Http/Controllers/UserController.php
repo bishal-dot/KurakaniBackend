@@ -50,6 +50,10 @@ class UserController extends Controller
                 }
             }
 
+            if (isset($updateData['interests'])) {
+                $updateData['interests'] = $request->interests;
+            }
+
             $user->update($updateData);
 
             return response()->json([
@@ -74,6 +78,16 @@ class UserController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
+        $interests = [];
+        if ($user->interests) {
+            if (is_array($user->interests)) {
+                $interests = $user->interests;
+            } else {
+                $decoded = json_decode($user->interests, true);
+                $interests = is_array($decoded) ? $decoded : explode(',', $user->interests);
+            }
+        }
+
         $matchesCount = $user->matches()->count();
 
         $photos = $user->photos()->get()->map(function ($photo) {
@@ -94,7 +108,7 @@ class UserController extends Controller
                 'age' => $user->age,
                 'gender' => $user->gender,
                 'purpose' => $user->purpose,
-                'interests' => $user->interests,
+                'interests' => $interests,
                 'about' => $user->about,
                 'job' => $user->job,
                 'education' => $user->education,
