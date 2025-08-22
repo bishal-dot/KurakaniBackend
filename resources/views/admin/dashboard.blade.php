@@ -3,511 +3,529 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dating App Admin Dashboard</title>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+    <title>Cupid's Compass Admin Dashboard</title>
     <style>
-        /* Basic Reset & Body Styling */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary-color: #ff6b81; /* A pink-red for a loving theme */
+            --secondary-color: #4a4a6a; /* A dark purple-blue for contrast */
+            --background-color: #fcebeb; /* A very light pink for the background */
+            --card-background: #ffffff; /* White for cards */
+            --text-color: #333333;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f7f6;
-            color: #333;
-        }
-
-        .dashboard-container {
-            display: grid;
-            grid-template-columns: 250px 1fr; /* Sidebar width and main content */
-            grid-template-rows: 60px 1fr; /* Header height and main content */
-            height: 100vh;
-        }
-
-        /* Header Styling */
-        .dashboard-header {
-            grid-column: 1 / -1; /* Spans across both columns */
-            background-color: #2c3e50; /* Dark blue */
-            color: white;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
         }
 
-        .dashboard-header .logo {
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-
-        .dashboard-header .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .dashboard-header .user-info span {
-            margin-right: 15px;
-        }
-
-        .dashboard-header .user-info i {
-            font-size: 1.2em;
-            margin-right: 10px;
-        }
-
-        .dashboard-header .logout-btn {
-            background-color: #e74c3c; /* Red */
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease;
-        }
-
-        .dashboard-header .logout-btn:hover {
-            background-color: #c0392b;
-        }
-
-        /* Sidebar Styling */
-        .dashboard-sidebar {
-            grid-row: 2 / 3; /* Stays in the second row (under header) */
-            background-color: #34495e; /* Slightly lighter dark blue */
-            color: white;
-            padding-top: 20px;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar-nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .sidebar-nav ul li {
-            margin-bottom: 5px;
-        }
-
-        .sidebar-nav ul li a {
-            display: block;
-            padding: 12px 20px;
-            color: white;
-            text-decoration: none;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .sidebar-nav ul li a i {
-            margin-right: 10px;
-        }
-
-        .sidebar-nav ul li a:hover,
-        .sidebar-nav ul li.active a {
-            background-color: #2980b9; /* Blue */
-            color: white;
-        }
-
-        /* Main Content Area */
-        .dashboard-main-content {
-            grid-column: 2 / 3; /* Occupies the second column */
-            grid-row: 2 / 3;
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 250px;
+            background-color: var(--secondary-color);
+            color: #ffffff;
             padding: 20px;
-            overflow-y: auto; /* Enable scrolling for content */
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--box-shadow);
         }
 
-        .content-section {
-            display: none; /* Hide all sections by default */
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px; /* Space between sections if multiple are visible */
-        }
-
-        .content-section.active-content {
-            display: block; /* Show active section */
-        }
-
-        .content-section h2 {
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+        .sidebar-header {
+            text-align: center;
             margin-bottom: 30px;
         }
 
-        .stat-card {
-            background-color: #ecf0f1; /* Light gray */
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-card h3 {
-            margin-top: 0;
-            color: #34495e;
-            font-size: 1.1em;
-        }
-
-        .stat-card p {
+        .logo {
             font-size: 2em;
-            font-weight: bold;
-            color: #2980b9;
+            font-weight: 700;
+            color: var(--primary-color);
         }
 
-        /* General Form & Table Styling */
-        .controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        input[type="text"],
-        select {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 100%; /* For full width in form groups */
-            box-sizing: border-box;
-        }
-
-        .btn {
-            background-color: #3498db; /* Blue */
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn:hover {
-            background-color: #2980b9;
-        }
-
-        .btn-primary {
-            background-color: #2ecc71; /* Green */
-        }
-
-        .btn-primary:hover {
-            background-color: #27ae60;
-        }
-
-        .btn-danger {
-            background-color: #e74c3c; /* Red */
-            margin: 10px;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-
-        .btn-small {
-            padding: 5px 10px;
+        .logo-subtitle {
             font-size: 0.8em;
-            margin: 10px;
+            color: #ccc;
+        }
+
+        .nav-menu {
+            list-style-type: none;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 1em;
+            border-radius: var(--border-radius);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .icon {
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            display: flex;justify-content: space-between;align-items: center;margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;color: var(--secondary-color);font-weight: 700;
+        }
+
+        .user-profile {
+            display: flex;align-items: center;gap: 10px;
+        }
+
+        .user-profile img {
+            width: 40px;height: 40px;border-radius: 50%;border: 2px solid var(--primary-color);
+        }
+
+        .user-profile span {
+            font-weight: 600;color: var(--secondary-color);
+        }
+
+        .content-section {
+            display: none; /* Hide all content sections by default */
+        }
+
+        .content-section.active {
+            display: block; /* Show the active one */
+        }
+
+        .dashboard-grid {
+            display: grid;grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));gap: 25px;
+        }
+
+        .card {
+            background-color: var(--card-background);padding: 25px;border-radius: var(--border-radius);box-shadow: var(--box-shadow);display: flex;flex-direction: column;transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;align-items: center;margin-bottom: 15px;gap: 10px;
+        }
+
+        .card-icon {
+            font-size: 1.8em;color: var(--primary-color);
+        }
+
+        .card-header h2 {
+            font-size: 1.2em;font-weight: 600;color: var(--secondary-color);
+        }
+
+        .card-body {
+            font-size: 2.5em;font-weight: 700;color: var(--primary-color);text-align: center;margin-top: 10px;
+        }
+
+        .card-description {
+            font-size: 0.9em;color: #777;text-align: center;
+        }
+
+        /* --- Table styles --- */
+        .full-card {
+            grid-column: 1 / -1;
         }
 
         .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            width: 100%;border-collapse: collapse;margin-top: 20px;
         }
 
-        .data-table th,
-        .data-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-
+        .data-table th, .data-table td {
+            padding: 12px 15px;text-align: left;border-bottom: 1px solid #eee;
         }
 
         .data-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-            color: #555;
+            background-color: var(--background-color);color: var(--secondary-color);font-weight: 600;
         }
 
-        .data-table tbody tr:nth-child(even) {
+        .data-table tr:hover {
             background-color: #f9f9f9;
         }
 
-        .data-table tbody tr:hover {
-            background-color: #f1f1f1;
+        .status {
+            display: inline-block;padding: 5px 10px;border-radius: 20px;font-size: 0.8em;font-weight: 600;color: #fff;
         }
 
-        .form-group {
-            margin-bottom: 15px;
+        .status.active { background-color: #28a745; }
+        .status.inactive { background-color: #dc3545; }
+        .status.pending { background-color: #ffc107; }
+        .status.approved { background-color: #17a2b8; }
+        .status.rejected { background-color: #dc3545; }
+        .status.open { background-color: #28a745; }
+        .status.closed { background-color: #6c757d; }
+
+        /* --- New Action Icons CSS --- */
+        .action-icons {
+            display: flex;gap: 10px;
         }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+        .action-icons i {
+            cursor: pointer;font-size: 1.1em;transition: color 0.2s, transform 0.2s;
         }
 
-        /* Moderation & Support Lists */
-        .moderation-list, .support-tickets {
-            list-style: none;
-            padding: 0;
+        .action-icons .edit-icon { color: #17a2b8; }
+        .action-icons .delete-icon { color: #dc3545; }
+        .action-icons .suspend-icon { color: #ffc107; }
+
+        .action-icons i:hover {
+            transform: scale(1.2);
+        }
+        
+        /* --- Graph Card CSS --- */
+        .chart-card {
+            height: 300px;display: flex;flex-direction: column;align-items: center;justify-content: center;position: relative;
         }
 
-        .moderation-list li, .support-tickets li {
-            background-color: #fdfdfd;
-            border: 1px solid #eee;
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .chart-container {
+            width: 150px;height: 150px;border-radius: 50%;
+            background: conic-gradient(
+                var(--primary-color) 0% 60%,
+                var(--secondary-color) 60% 100%
+            );
+            position: relative;margin-bottom: 20px;
         }
 
-        .moderation-list li i, .support-tickets li i {
-            margin-right: 10px;
-            color: #777;
+        .chart-label {
+            position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);font-size: 1.2em;font-weight: 600;color: var(--text-color);
         }
 
-        /* Chart Placeholder */
-        .chart-placeholder {
-            background-color: #ecf0f1;
-            border: 1px dashed #ccc;
-            padding: 50px 20px;
-            text-align: center;
-            color: #777;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .chart-legend {
+            display: flex;justify-content: center;gap: 25px;font-size: 0.9em;
         }
 
-        /* Range input styling */
-        input[type="range"] {
-            width: calc(100% - 70px); /* Adjust width to make space for value display */
-            margin-right: 10px;
-            vertical-align: middle;
+        .legend-item {
+            display: flex;align-items: center;gap: 5px;
         }
-        #distance-value {
-            display: inline-block;
-            min-width: 60px; /* Ensure space for longer values */
-            text-align: right;
-            font-weight: bold;
-            color: #2c3e50;
+
+        .legend-color {
+            width: 15px;height: 15px;border-radius: 4px;
         }
+
+        .legend-color.male { background-color: var(--secondary-color); }
+        .legend-color.female { background-color: var(--primary-color); }
+
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <header class="dashboard-header">
-            <div class="logo">DatingApp Admin</div>
-            <div class="user-info">
-                <span>Welcome, Admin!</span>
-                <i class="fas fa-user-circle"></i>
-                <button class="logout-btn">Logout</button>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">Welcome, {{ Auth::user()->username }}</div>
+            <div class="logo-subtitle">KuraKani Admin</div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" data-target="dashboard">
+                    <i class="fas fa-home icon"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-target="users">
+                    <i class="fas fa-users icon"></i>
+                    Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-target="matches">
+                    <i class="fas fa-heart icon"></i>
+                    Matches
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-target="reports">
+                    <i class="fas fa-bell icon"></i>
+                    Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-target="settings">
+                    <i class="fas fa-cog icon"></i>
+                    Settings
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <header class="header">
+            <h1 id="page-title">Dashboard</h1>
+            <div class="user-profile">
+                <span>Admin User</span>
+                <i class="fa fa-user-shield" style="color:#ff6b81; font-size:24px;"></i>
             </div>
         </header>
 
-        <aside class="dashboard-sidebar">
-            <nav class="sidebar-nav">
-                <ul>
-                    <li class="active"><a href="#dashboard-overview"><i class="fas fa-tachometer-alt"></i> Dashboard Overview</a></li>
-                    <li><a href="#user-management"><i class="fas fa-users"></i> User Management</a></li>
-                    <li><a href="#user-details"><i class="fas fa-users"></i> User Details</a></li>
-                    <li><a href="#content-moderation"><i class="fas fa-shield-alt"></i> Content Moderation</a></li>
-                    <li><a href="#matchmaking-control"><i class="fas fa-heart"></i> Matchmaking Control</a></li>
-                    <li><a href="#analytics-reports"><i class="fas fa-chart-line"></i> Analytics & Reports</a></li>
-                    <li><a href="#settings"><i class="fas fa-cog"></i> System Settings</a></li>
-                    <li><a href="#support"><i class="fas fa-life-ring"></i> Support & Disputes</a></li>
-                </ul>
-            </nav>
-        </aside>
+        <div class="content-section active" id="dashboard">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-users card-icon"></i>
+                        <h2>Total Users</h2>
+                    </div>
+                    <div class="card-body">{{ $totalUsers }}</div>
+                    <div class="card-description">Registered on the platform</div>
+                </div>
 
-        <main class="dashboard-main-content">
-            <section id="dashboard-overview" class="content-section active-content">
-                <h2>Dashboard Overview</h2>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Total User(s)</h3>
-                        <p>{{ $totalUsers }}</p>
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-user-plus card-icon"></i>
+                        <h2>New Users</h2>
                     </div>
-                    <div class="stat-card">
-                        <h3>New Registrations (Today)</h3>
-                        <p>{{ $newUsersToday }}</p>
+                    <div class="card-body">{{ $newUsersToday }}</div>
+                    <div class="card-description">Joined in the last 30 days</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-heart card-icon"></i>
+                        <h2>Total Matches</h2>
                     </div>
-                    <div class="stat-card">
-                        <h3>Premium Subscriptions</h3>
-                        <p>2,100</p>
+                    <div class="card-body">5,432</div>
+                    <div class="card-description">Successful connections made</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar card-icon"></i>
+                        <h2>Daily Active Users</h2>
                     </div>
-                    <div class="stat-card">
-                        <h3>Pending Reports</h3>
-                        <p>32</p>
+                    <div class="card-body">875</div>
+                    <div class="card-description">Users active today</div>
+                </div>
+
+                <div class="card full-card chart-card">
+                    <div class="card-header">
+                        <i class="fas fa-venus-mars card-icon"></i>
+                        <h2>User Demographics</h2>
+                    </div>
+                    <div class="chart-container">
+                        </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color female"></div>
+                            <span>Female Users (60%)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color male"></div>
+                            <span>Male Users (40%)</span>
+                        </div>
                     </div>
                 </div>
-                {{-- More detailed graphs/charts would go here (e.g., using Chart.js) --}}
-            </section>
+            </div>
+        </div>
 
-            <section id="user-management" class="content-section">
-                <h2>User Management</h2>
-                <p>Tables to view, edit, suspend, or ban user accounts.</p>
-                <div class="controls">
-                    <input type="text" placeholder="Search users...">
-                    <button class="btn">Search</button>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Password</th>
-                            <th>Created_at</th>
-                            <th>Actions</th>
-                            </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($users as $user)
-                            <tr>
-                                <td>{{ $user->id }}</td>
-                                <td>{{ $user->username }}</td>
-                                <td>{{ $user->email }}</td>
-                                <td>{{ $user->password }}</td>
-                                <td>{{ $user->created_at }}</td>
-                                <td><button class="btn-small">Edit</button> <button class="btn-small btn-danger">Suspend</button></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </section>
-
-            <section id="user-details" class="content-section">
-                <h2>User Details</h2>
-                <p>Tables to view other user details.</p>
-                <div class="controls">
-                    <input type="text" placeholder="Search users...">
-                    <button class="btn">Search</button>
+        <div class="content-section" id="users">
+            <div class="card full-card">
+                <div class="card-header">
+                    <i class="fas fa-users card-icon"></i>
+                    <h2>All Users</h2>
                 </div>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Username</th>
+                            <th>User ID</th>
+                            <th>Name</th>
                             <th>Gender</th>
                             <th>Age</th>
-                            <th>Job</th>
-                            <th>Interests</th>
-                            <th>Education</th>
-                            <th>About</th>
+                            <th>Status</th>
                             <th>Actions</th>
-                            </tr>
+                        </tr>
                     </thead>
                     <tbody>
-                        @foreach ($users as $user)
+                        @foreach ($user as $users)
                             <tr>
-                                <td>{{ $user->id }}</td>
-                                <td>{{ $user->username }}</td>
-                                <td>{{ $user->gender }}</td>
-                                <td>{{ $user->age }}</td>
-                                <td>{{ $user->job }}</td>
-                                <td>{{ $user->interests }}</td>
-                                <td>{{ $user->education }}</td>
-                                <td>{{ $user->about }}</td>
-                                <td><button class="btn-small">Edit</button> <button class="btn-small btn-danger">Suspend</button></td>
-                            </tr>
+                            <td>101</td>
+                            <td>Jane Doe</td>
+                            <td>Female</td>
+                            <td>28</td>
+                            <td><span class="status active">Active</span></td>
+                            <td>
+                                <div class="action-icons">
+                                    <i class="fas fa-edit edit-icon" title="Edit User"></i>
+                                    <i class="fas fa-trash-alt delete-icon" title="Delete User"></i>
+                                    <i class="fas fa-ban suspend-icon" title="Suspend User"></i>
+                                </div>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
-            </section>
+            </div>
+        </div>
 
-            <section id="content-moderation" class="content-section">
-                <h2>Content Moderation</h2>
-                <p>Manage reported content: photos, bios, chat messages. Review and take action.</p>
-                <ul class="moderation-list">
-                    <li><i class="fas fa-image"></i> Photo Report: User "JaneDoe" - Nudity <button class="btn-small btn-danger">Review</button></li>
-                    <li><i class="fas fa-comment"></i> Chat Report: User "John123" vs "SarahB" - Harassment <button class="btn-small btn-danger">Review</button></li>
-                </ul>
-            </section>
-
-            <section id="matchmaking-control" class="content-section">
-                <h2>Matchmaking Control</h2>
-                <p>Adjust the dating algorithm parameters and manage discovery preferences.</p>
-                <div class="form-group">
-                    <label for="distance">Matching Distance Radius (km):</label>
-                    <input type="range" id="distance" min="1" max="500" value="50">
-                    <span id="distance-value">50 km</span>
+        <div class="content-section" id="matches">
+            <div class="card full-card">
+                <div class="card-header">
+                    <i class="fas fa-heart card-icon"></i>
+                    <h2>Recent Matches</h2>
                 </div>
-                <button class="btn btn-primary">Save Settings</button>
-            </section>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Match ID</th>
+                            <th>User 1</th>
+                            <th>User 2</th>
+                            <th>Match Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>M-001</td>
+                            <td>Jane Doe</td>
+                            <td>John Smith</td>
+                            <td>2025-08-22</td>
+                            <td><span class="status active">Active</span></td>
+                        </tr>
+                        <tr>
+                            <td>M-002</td>
+                            <td>Emily Davis</td>
+                            <td>Michael Brown</td>
+                            <td>2025-08-21</td>
+                            <td><span class="status active">Active</span></td>
+                        </tr>
+                        <tr>
+                            <td>M-003</td>
+                            <td>Alex Johnson</td>
+                            <td>Sophia Wilson</td>
+                            <td>2025-08-20</td>
+                            <td><span class="status inactive">Inactive</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-            <section id="analytics-reports" class="content-section">
-                <h2>Analytics & Reports</h2>
-                <p>View detailed charts and graphs for user engagement, revenue, and app performance.</p>
-                <div class="chart-placeholder">
-                    <p>Graph for daily active users would go here.</p>
+        <div class="content-section" id="reports">
+            <div class="card full-card">
+                <div class="card-header">
+                    <i class="fas fa-bell card-icon"></i>
+                    <h2>Pending User Reports</h2>
                 </div>
-                <div class="chart-placeholder">
-                    <p>Graph for monthly revenue would go here.</p>
-                </div>
-            </section>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Reported User</th>
+                            <th>Reported By</th>
+                            <th>Reason</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>R-001</td>
+                            <td>John Smith</td>
+                            <td>Sarah Lee</td>
+                            <td>Spamming messages</td>
+                            <td>2025-08-22</td>
+                            <td><span class="status open">Open</span></td>
+                        </tr>
+                        <tr>
+                            <td>R-002</td>
+                            <td>Emily Davis</td>
+                            <td>Admin</td>
+                            <td>Inappropriate content</td>
+                            <td>2025-08-21</td>
+                            <td><span class="status closed">Closed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-            <section id="settings" class="content-section">
-                <h2>System Settings</h2>
-                <p>Manage global app settings, user roles, and integrations.</p>
-                <div class="form-group">
-                    <label for="terms-status">Terms & Conditions Status:</label>
-                    <select id="terms-status">
-                        <option value="active">Active</option>
-                        <option value="draft">Draft</option>
-                    </select>
+        <div class="content-section" id="settings">
+            <div class="card full-card">
+                <div class="card-header">
+                    <i class="fas fa-cog card-icon"></i>
+                    <h2>Application Settings</h2>
                 </div>
-                <div class="form-group">
-                    <input type="checkbox" id="feature-x">
-                    <label for="feature-x">Enable New Messaging Feature</label>
-                </div>
-                <button class="btn btn-primary">Update Settings</button>
-            </section>
-
-            <section id="support" class="content-section">
-                <h2>Support & Disputes</h2>
-                <p>Handle user support tickets and mediate disputes.</p>
-                <ul class="support-tickets">
-                    <li>Ticket #001: Payment Issue - User "Alice" <button class="btn-small">View</button></li>
-                    <li>Ticket #002: Profile Bug - User "Bob" <button class="btn-small">View</button></li>
-                </ul>
-            </section>
-        </main>
-    </div> 
-
+                <form style="padding: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label for="app-name" style="display: block; font-weight: 600; margin-bottom: 5px;">Application Name</label>
+                        <input type="text" id="app-name" name="app-name" value="Cupid's Compass" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="min-age" style="display: block; font-weight: 600; margin-bottom: 5px;">Minimum User Age</label>
+                        <input type="number" id="min-age" name="min-age" value="18" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+                    </div>
+                    <button type="submit" style="background-color: var(--primary-color); color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
     <script>
-        // Simple JavaScript for tab switching
-        document.querySelectorAll('.sidebar-nav ul li a').forEach(item => {
-            item.addEventListener('click', event => {
-                event.preventDefault();
-                document.querySelectorAll('.sidebar-nav ul li').forEach(li => li.classList.remove('active'));
-                item.parentElement.classList.add('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            const pageTitle = document.getElementById('page-title');
 
-                document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active-content'));
-                document.querySelector(item.getAttribute('href')).classList.add('active-content');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+
+                    // Remove 'active' class from all links and sections
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
+
+                    // Add 'active' class to the clicked link
+                    this.classList.add('active');
+
+                    // Get the target section ID and show it
+                    const targetId = this.dataset.target;
+                    const targetSection = document.getElementById(targetId);
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                        // Update the page title
+                        pageTitle.textContent = this.textContent.trim();
+                    }
+                });
             });
         });
-
-        // Update distance value for range input
-        const distanceRange = document.getElementById('distance');
-        const distanceValueSpan = document.getElementById('distance-value');
-        if (distanceRange && distanceValueSpan) {
-            distanceRange.addEventListener('input', (event) => {
-                distanceValueSpan.textContent = `${event.target.value} km`;
-            });
-        }
     </script>
 </body>
 </html>

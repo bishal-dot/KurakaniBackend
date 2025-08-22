@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -40,6 +41,7 @@ class AuthController extends Controller
     // ---------------- LOGIN ----------------
     public function login(Request $request)
     {
+        Log::info($request->all());
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string'
@@ -55,6 +57,7 @@ class AuthController extends Controller
 
         $profileComplete = !empty($user->fullname) && !empty($user->gender) && !empty($user->age);
 
+        
         return response()->json([
             'error' => false,
             'message' => 'Login successful',

@@ -25,11 +25,13 @@ return new class extends Migration
             $table->string('coverphoto')->nullable();
             $table->string('purpose')->nullable();
             $table->string('job')->nullable();
-            $table->text('interests')->nullable(); // could be JSON
+            $table->json('interests')->nullable(); // could be JSON
             $table->string('education')->nullable();
             $table->text('about')->nullable();
-            $table->boolean('is_verified')->default(false);
+            $table->string('role')->default('user');
             $table->boolean('is_admin')->default(false);
+            $table->boolean('is_verified')->default(false);
+            $table->boolean('is_suspended')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });

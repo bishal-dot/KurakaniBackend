@@ -34,7 +34,8 @@ class User extends Authenticatable
         'education', 
         'about',
         'is_verified',
-        'is_admin'
+        'is_admin',
+        'is_suspended'
     ];
 
     /**
@@ -58,6 +59,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'interests' => 'array',
         ];
     }
 
