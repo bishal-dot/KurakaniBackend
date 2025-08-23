@@ -73,20 +73,22 @@ class User extends Authenticatable
     public function photos(){
         return $this->hasMany(UserPhoto::class);
     }
-     public function matches()
-        {
-            return $this->hasMany(MatchProfile::class, 'user_id'); // matches owned by this user
-        }
+    public function matches()
+    {
+        return $this->hasMany(MatchProfile::class, 'user_id'); // matches owned by this user
+    }
 
-        public function matchedUsers()
-        {
-            return $this->hasManyThrough(
-                User::class,
-                MatchProfile::class,
-                'user_id', // Foreign key on matches table
-                'id',      // Foreign key on users table
-                'id',      // Local key on users table
-                'matched_user_id' // Local key on matches table
-            );
-        }
+    public function matchedUsers(){
+        return $this->hasManyThrough(
+            User::class,
+            MatchProfile::class,
+            'user_id', // Foreign key on matches table
+            'id',      // Foreign key on users table
+            'id',      // Local key on users table
+            'matched_user_id' // Local key on matches table
+        );
+    }
+    public function interests(){
+        return $this->belongsToMany(Interest::class, 'user_interests','user_id','interest_id');
+    }
 }
