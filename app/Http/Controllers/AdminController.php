@@ -2,48 +2,49 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
+use App\Models\User;
 
 class AdminController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function showLogin()
     {
-        //
+        return view('admin.login');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function login(Request $request)
     {
-        //
+        dd($request);
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            if (Auth::user()->is_admin) {
+                return redirect()->route('admin.dashboard');
+            } else {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Access denied. You are not an admin.']);
+            }
+        }
+
+        return back()->withErrors(['email' => 'Invalid login credentials.']);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function dashboard()
     {
-        //
-    }
+        $users = User::all();
+        $totalUsers = User::count();
+        $newUsersToday = User::whereDate('created_at', Carbon::today())->count();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $dates = [];
+        $counts = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i)->format('Y-m-d');
+            $dates[] = $date;
+            $counts[] = User::whereDate('created_at', $date)->count();
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return view('admin.dashboard', compact('users','totalUsers','newUsersToday','dates','counts'));
     }
 }

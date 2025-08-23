@@ -38,9 +38,9 @@ class UserController extends Controller
             ]);
 
             // Encode interests if present
-            if (isset($updateData['interests'])) {
-                $updateData['interests'] = json_encode($updateData['interests']);
-            }
+            // if (isset($updateData['interests'])) {
+            //     $updateData['interests'] = json_encode($updateData['interests']);
+            // }
 
             // Handle profile photo upload
             if (!empty($request->profile_photo_base64)) {
