@@ -34,7 +34,8 @@ class User extends Authenticatable
         'education', 
         'about',
         'is_verified',
-        'is_admin'
+        'is_admin',
+        'is_suspended'
     ];
 
     /**

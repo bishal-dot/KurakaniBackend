@@ -1,10 +1,11 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FaceVerificationController;
 use App\Http\Controllers\UserController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\Admin\AdminAuthController;
 
 
@@ -27,3 +28,7 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::delete('/profile/photos/{id}', [UserController::class, 'deletePhoto']);
     Route::get('/photos',[UserController::class,'getPhotos']);
 });
+
+// message
+Route::get('/messages/{otherUserId}', [MessageController::class, 'getMessages']);
+Route::post('/messages/{otherUserId}', [MessageController::class, 'sendMessage']);

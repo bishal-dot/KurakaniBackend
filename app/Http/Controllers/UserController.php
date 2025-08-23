@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\UserPhoto;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -36,9 +37,9 @@ class UserController extends Controller
             ]);
 
             // Encode interests if present
-            if (isset($updateData['interests'])) {
-                $updateData['interests'] = json_encode($updateData['interests']);
-            }
+            // if (isset($updateData['interests'])) {
+            //     $updateData['interests'] = json_encode($updateData['interests']);
+            // }
 
             // Handle profile photo upload
             if (!empty($request->profile_photo_base64)) {
@@ -149,9 +150,9 @@ class UserController extends Controller
                 unset($updateData['bio']);
             }
 
-            if (isset($updateData['interests'])) {
-                $updateData['interests'] = json_encode($updateData['interests']);
-            }
+            // if (isset($updateData['interests'])) {
+            //     $updateData['interests'] = json_encode($updateData['interests']);
+            // }
 
             if (!empty($request->profile_photo_base64)) {
                 $decoded = base64_decode($request->profile_photo_base64);
