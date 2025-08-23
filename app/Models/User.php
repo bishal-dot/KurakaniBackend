@@ -59,7 +59,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
-            'interests' => 'array',
+            'interests' => 'array'
         ];
     }
 
