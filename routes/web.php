@@ -8,18 +8,28 @@ Route::get('/', function () {
     return view('admin.login');
 });
 
-Route::prefix('admin')->group(function () {
+// Admin Login Routes
+// This route displays the admin login form.
+Route::get('admin/login', [AdminController::class, 'showLogin'])->name('admin.login');
 
-    // Show login page
-    Route::get('/login', [AdminController::class, 'showLogin'])->name('admin.login');
+// This route handles the login form submission.
+Route::post('admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
 
-    // Handle login submission
-    Route::post('/login', [AdminController::class, 'login'])->name('admin.login.submit');
+// Admin Dashboard Route
+// This route displays the main dashboard and should be protected.
+Route::middleware(['auth'])->group(function () {
+    Route::get('admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+});
 
-    // Admin dashboard (protected by auth + admin middleware)
-    Route::middleware(['auth', 'admin'])->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    });
+Route::prefix('admin')->middleware('auth')->group(function () {
+    Route::get('users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::get('users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
+    Route::put('users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::put('users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('admin.users.suspend');
+    Route::delete('users/{user}/delete', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+});
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('users', AdminUserController::class);
 });
 
 
