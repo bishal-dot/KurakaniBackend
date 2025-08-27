@@ -9,69 +9,123 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Interest;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+
 
 class UserController extends Controller
 {
     // Complete or update user profile
-    public function completeProfile(Request $request)
-    {
-        $request->validate([
-            'fullname'              => 'required|string|max:255',
-            'age'                   => 'required|numeric|min:18',
-            'gender'                => 'nullable|in:male,female',
-            'profile_photo_base64'  => 'nullable|string',
-            'purpose'               => 'nullable|string|max:255',
-            'job'                   => 'nullable|string|max:255',
-            'interests'             => 'nullable|array',
-            'education'             => 'nullable|string|max:255',
-            'about'                 => 'nullable|string|max:1000',
+   public function createProfile(Request $request)
+{
+    $request->validate([
+        'fullname' => 'required|string|max:255',
+        'age' => 'required|integer|min:18|max:100',
+        'gender' => 'required|in:male,female',
+        'purpose' => 'nullable|string|max:255',
+        'job' => 'nullable|string|max:255',
+        'education' => 'nullable|string|max:255',
+        'about' => 'nullable|string',
+        'interests' => 'nullable|array',
+        // 'profile_base64' => 'nullable|string',
+    ]);
+
+    $user = Auth::user();
+
+    $user->fullname = $request->fullname;
+    $user->age = $request->age;
+    $user->gender = $request->gender;
+    $user->purpose = $request->purpose;
+    $user->job = $request->job;
+    $user->education = $request->education;
+    $user->about = $request->about;
+    $user->interests = $request->interests ? json_encode($request->interests) : null;
+
+    // Handle Base64 profile
+    // if ($request->profile_base64) {
+    //     $imageData = $request->profile_base64;
+    //     $image = base64_decode($imageData);
+    //     $fileName = 'profile_' . time() . '.jpg';
+    //     $filePath = storage_path('app/public/profiles/' . $fileName);
+
+    //     // make sure directory exists
+    //     if (!file_exists(dirname($filePath))) {
+    //         mkdir(dirname($filePath), 0755, true);
+    //     }
+
+    //     file_put_contents($filePath, $image);
+    //     $user->profile = asset('storage/profiles/' . $fileName);
+    // }
+
+    $user->profile_complete = true;
+    $user->save();
+
+    // Create Sanctum token
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+     return response()->json([
+        'success' => true,
+        'message' => 'Profile created successfully.',
+        'token' => $token,
+        'user' => [
+            'id' => $user->id,
+            'fullname' => $user->fullname,
+            'username' => $user->username,
+            'email' => $user->email,
+            'age' => $user->age,
+            'gender' => $user->gender,
+            'purpose' => $user->purpose,
+            'job' => $user->job,
+            'education' => $user->education,
+            'about' => $user->about,
+            'interests' => json_decode($user->interests) ?? [],
+            'profile_complete' => $user->profile_complete,
+            'is_verified' => $user->is_verified,
+            'profile' => $user->profile,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ]
+    ]);
+}
+
+
+    //upload profile photo
+    public function uploadProfilePhoto(Request $request)
+{
+    $request->validate([
+        'profile' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // max 5MB
+    ]);
+
+    $user = $request->user();
+
+    if ($request->hasFile('profile')) {
+        $file = $request->file('profile');
+
+        // Optional: Delete old profile photo if exists
+        if ($user->profile) {
+            Storage::disk('public')->delete($user->profile);
+        }
+
+        // Save new profile photo
+        $path = $file->store('profiles', 'public');
+
+        // Update user profile URL
+        $user->profile = $path;
+        $user->save();
+
+        return response()->json([
+            'error' => false,
+            'message' => 'Profile photo uploaded successfully',
+            'profile_url' => asset("storage/$path") // public URL
         ]);
-
-        $user = $request->user();
-        if (!$user) {
-            return response()->json(['error' => true, 'message' => 'Unauthorized'], 401);
-        }
-
-        try {
-            $updateData = $request->only([
-                'fullname', 'age', 'gender', 'purpose', 'job', 'education', 'about', 'interests'
-            ]);
-
-            // Encode interests if present
-            // if (isset($updateData['interests'])) {
-            //     $updateData['interests'] = json_encode($updateData['interests']);
-            // }
-
-            // Handle profile photo upload
-            if (!empty($request->profile_photo_base64)) {
-                $decoded = base64_decode($request->profile_photo_base64);
-                if ($decoded !== false) {
-                    $profilePhotoName = 'profile_' . Str::random(10) . '.jpg';
-                    Storage::disk('public')->put('profile_photos/' . $profilePhotoName, $decoded);
-                    $updateData['profile'] = $profilePhotoName;
-                }
-            }
-
-            if (isset($updateData['interests'])) {
-                $updateData['interests'] = $request->interests;
-            }
-
-            $user->update($updateData);
-
-            return response()->json([
-                'error'   => false,
-                'message' => 'Profile completed successfully',
-                'user'    => $user,
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error'   => true,
-                'message' => 'Internal server error',
-                'debug'   => $e->getMessage(),
-            ], 500);
-        }
     }
+
+    return response()->json([
+        'error' => true,
+        'message' => 'No profile photo uploaded'
+    ], 400);
+}
 
     public function showProfile(Request $request)
     {
@@ -114,7 +168,7 @@ class UserController extends Controller
                 'about' => $user->about,
                 'job' => $user->job,
                 'education' => $user->education,
-                'profile' => $user->profile ? url('storage/' . $user->profile) : null,
+                'profile' => $user->profile ? asset('storage/' . $user->profile) : null,
                 'is_verified' => $user->is_verified,
                 'matches_count' => $matchesCount,
                 'photos' => $photos
@@ -281,9 +335,22 @@ class UserController extends Controller
     public function otherUsers(Request $request)
     {
         $currentUser = Auth::user();
+        $currentUserGender = strtolower($currentUser->gender);
+
+        if ($currentUserGender === 'male') {
+            $targetGender = 'female';
+        } elseif ($currentUserGender === 'female') {
+            $targetGender = 'male';
+        } else {
+            // if gender is unknown, just return empty
+            return response()->json([]);
+        }
 
         // Fetch all other users except the logged-in user
-        $users = User::where('id', '!=', $currentUser->id)->get();
+        $users = User::where('id', '!=', $currentUser->id)
+                 ->whereRaw('Lower(gender) = ? ', $targetGender)
+                 ->where('is_verified', true)
+                 ->get();
 
         $response = $users->map(function($user) {
             $interests = $user->interests;
@@ -307,6 +374,7 @@ class UserController extends Controller
                 'about' => $user->about ?? '',
                 'profile' => $user->profile ? asset('storage/' . $user->profile) : null,
                 'photos' => $photos, // directly include other photos
+                'is_verified' => $user->is_verified
             ];
         });
 
@@ -356,40 +424,120 @@ class UserController extends Controller
 
     
     // Search users with filters
- public function search(Request $request)
+public function search(Request $request)
 {
+    $currentUser = $request->user(); // logged-in user
+    $currentUserId = $currentUser->id;
     $search = $request->input('search');
-    $interests = $request->input('interests'); // comma separated e.g. "Music,Sports"
+    $interests = $request->input('interests'); // comma separated
 
-    $query = User::with('photos');
+     // Filter: exclude self and only show opposite gender
+    $query = User::with('photos')
+        ->where('id', '!=', $currentUserId)
+        ->where('gender', $currentUser->gender === 'male' ? 'female' : 'male');
 
-    if ($search || $interests) {
-        $query->where(function ($q) use ($search, $interests) {
-            if ($search) {
-                $q->where('fullname', 'like', "%$search%")
-                  ->orWhere('username', 'like', "%$search%");
-            }
+    // Search by name or username
+    if ($search) {
+        $searchLower = strtolower($search);
+        $query->where(function ($q) use ($searchLower) {
+            $q->whereRaw('LOWER(fullname) LIKE ?', ["%$searchLower%"])
+              ->orWhereRaw('LOWER(username) LIKE ?', ["%$searchLower%"])
+              ->orWhere(function ($qq) use ($searchLower) {
+                  // Search in interests array (case-insensitive)
+                  $qq->whereRaw("JSON_CONTAINS(LOWER(JSON_EXTRACT(interests, '$')), JSON_QUOTE(?))", [$searchLower]);
+              });
+        });
+    }
 
-            if ($interests) {
-                $interestArray = explode(',', $interests);
-                $q->orWhereHas('interests', function ($sub) use ($interestArray) {
-                    $sub->whereIn('name', $interestArray);
-                });
+    // Filter by interests (case-insensitive)
+    if ($interests) {
+        $interestArray = array_map('trim', explode(',', $interests));
+
+        $query->where(function($q) use ($interestArray) {
+            foreach ($interestArray as $interest) {
+                $q->orWhereRaw("JSON_CONTAINS(LOWER(JSON_EXTRACT(interests, '$')), LOWER(JSON_QUOTE(?)))", [$interest]);
             }
         });
     }
 
     $users = $query->get();
 
-    $allInterests = Interest::all();
+    // Format response with is_verified
+    $response = $users->map(function($user) {
+        $interests = $user->interests;
+        if ($interests && !is_array($interests)) {
+            $decoded = json_decode($interests, true);
+            $interests = is_array($decoded) ? $decoded : explode(',', $user->interests);
+        }
+
+        $photos = $user->photos->map(function($photo){
+            return asset('storage/' . $photo->photo_path);
+        });
+
+        return [
+            'id' => $user->id,
+            'fullname' => $user->fullname,
+            'username' => $user->username,
+            'age' => $user->age,
+            'gender' => $user->gender,
+            'purpose' => $user->purpose,
+            'interests' => $interests ?? [],
+            'about' => $user->about ?? '',
+            'profile' => $user->profile ? asset('storage/' . $user->profile) : null,
+            'photos' => $photos,
+            'is_verified' => $user->is_verified
+        ];
+    });
 
     return response()->json([
         'success' => true,
-        'users' => $users,
-        'interests' => $allInterests
+        'users' => $response
     ]);
 }
 
+
+public function getInterests()
+{
+    $users = User::pluck('interests')->toArray(); // get all users' interests
+    $allInterests = [];
+
+    foreach ($users as $interests) {
+        if ($interests) {
+            // Decode JSON if stored as array
+            $decoded = is_array($interests) ? $interests : json_decode($interests, true);
+            if (is_array($decoded)) {
+                $allInterests = array_merge($allInterests, $decoded);
+            }
+        }
+    }
+
+    // Normalize: lowercase, trim, and remove duplicates
+    $allInterests = array_unique(array_map(function($i) {
+        return strtolower(trim($i));
+    }, $allInterests));
+
+    return response()->json(array_values($allInterests));
+}
+
+// change password
+public function changePassword(Request $request)
+{
+    $request->validate([
+        'current_password' => 'required',
+        'new_password' => 'required|min:6|confirmed',
+    ]);
+
+    $user = $request->user();
+
+    if (!Hash::check($request->current_password, $user->password)) {
+        return response()->json(['error' => true, 'message' => 'Current password is incorrect'], 400);
+    }
+
+    $user->password = Hash::make($request->new_password);
+    $user->save();
+
+    return response()->json(['error' => false, 'message' => 'Password updated successfully']);
+}
 
 
 }   

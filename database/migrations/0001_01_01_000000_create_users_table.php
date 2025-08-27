@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('education')->nullable();
             $table->text('about')->nullable();
             $table->string('role')->default('user');
+            $table->boolean('profile_complete')->default(false);
             $table->boolean('is_admin')->default(false);
             $table->boolean('is_verified')->default(false);
             $table->boolean('is_suspended')->default(false);
