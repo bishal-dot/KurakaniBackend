@@ -37,16 +37,22 @@ Route::middleware('auth:sanctum')->group(function(){
 
 });
 
-// message
+// message and search users in chat
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/messages/send', [MessageController::class, 'send']);
-    Route::get('/messages/{userId}', [MessageController::class, 'getMessages']);
-    Route::get('/chats', [MessageController::class, 'getChatUsers']);
-});
+    
+    // Send a message to a user
+    Route::post('messages/send', [MessageController::class, 'send']);
 
-// Search users in chat fragment
-// Route::middleware('auth:sanctum')->get('/users/search', [UserController::class, 'searchUsers']);
-Route::get('/users/search', [UserController::class, 'searchUsers']);
+    // Fetch messages between current user and another user
+    Route::get('/messages/{userId}', [MessageController::class, 'getMessages'])
+        ->whereNumber('userId'); // ✅ Enforces numeric userId
+
+    // Get all users the current user has chatted with
+    Route::get('messages', [MessageController::class, 'getChatUsers']);
+
+    // Search users by name/username (for the search dropdown)
+    Route::get('messages/search', [MessageController::class, 'searchUsers']);
+});
 
 // Match Notifications
 Route::post('/send-match', [MatchController::class, 'sendMatch']);

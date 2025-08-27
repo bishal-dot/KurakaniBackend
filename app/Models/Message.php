@@ -11,7 +11,7 @@ class Message extends Model
     protected $table = 'messages';
 
 
-    protected $fillable = ['sender_id', 'receiver_id', 'message'];
+    protected $fillable = ['sender_id', 'receiver_id', 'message', 'is_read'];
 
     protected $casts = [
     'sender_id' => 'integer',

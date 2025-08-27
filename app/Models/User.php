@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -31,18 +30,18 @@ class User extends Authenticatable
         'is_admin',
         'is_suspended'
     ];
+
     protected $hidden = [
         'password',
         'remember_token',
     ];
-    protected $casts =
-        [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_verified' => 'boolean',
-            'interests'   => 'array'
-        ];
-    
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_verified' => 'boolean',
+        'interests'   => 'array'
+    ];
 
     public function getVerificationPhotoUrlAttribute(){
         return $this->verification_photo ? asset('storage/verification_photos/' . $this->verification_photo) : null;
@@ -55,6 +54,7 @@ class User extends Authenticatable
     public function photos(){
         return $this->hasMany(UserPhoto::class);
     }
+
     public function matches()
     {
         return $this->hasMany(MatchProfile::class, 'user_id'); // matches owned by this user
@@ -71,4 +71,14 @@ class User extends Authenticatable
         );
     }
 
+    // ✅ Messages relationships
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id');
+    }
 }

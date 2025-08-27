@@ -12,10 +12,15 @@ return new class extends Migration {
             $table->unsignedBigInteger('sender_id');
             $table->unsignedBigInteger('receiver_id');
             $table->text('message');
+            $table->boolean('is_read')->default(false);
             $table->timestamps();
 
+            // Foreign key constraints
             $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('receiver_id')->references('id')->on('users')->onDelete('cascade');
+
+            // Index for faster lookups between sender and receiver
+            $table->index(['sender_id', 'receiver_id']);
         });
     }
 
@@ -24,4 +29,3 @@ return new class extends Migration {
         Schema::dropIfExists('messages');
     }
 };
-

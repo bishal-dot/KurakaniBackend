@@ -6,60 +6,135 @@ use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MessageController extends Controller
 {
     // 1️⃣ Send a message (with authentication)
     public function send(Request $request)
     {
+        Log::info($request);
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
             'message' => 'required|string',
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user(); // current logged-in user
 
-        $message = Message::create([
-            'sender_id' => $user->id,
+        // Create message with is_read defaulting to false
+        $message = $user->sentMessages()->create([
             'receiver_id' => $request->receiver_id,
             'message' => $request->message,
+            'is_read' => false,
         ]);
 
         return response()->json($message, 201);
     }
 
     // 2️⃣ Fetch messages between current user and another user
-    public function getMessages($userId)
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+        public function getMessages($userId)
+        {
+            // ✅ Ensure $userId is numeric
+            if (!is_numeric($userId)) {
+                return response()->json(['error' => 'Invalid user ID'], 400);
+            }
 
-        $messages = Message::where(function($q) use ($userId, $user) {
-            $q->where('sender_id', $user->id)
-              ->where('receiver_id', $userId);
-        })->orWhere(function($q) use ($userId, $user) {
-            $q->where('sender_id', $userId)
-              ->where('receiver_id', $user->id);
-        })->orderBy('created_at')
-          ->get();
+            $userId = (int) $userId;
 
-        return response()->json($messages);
-    }
+            /** @var User $user */
+            $user = Auth::user();
+
+            // Fetch messages between the two users
+            $messages = Message::where(function($q) use ($user, $userId) {
+                $q->where('sender_id', $user->id)
+                ->where('receiver_id', $userId);
+            })->orWhere(function($q) use ($user, $userId) {
+                $q->where('sender_id', $userId)
+                ->where('receiver_id', $user->id);
+            })->orderBy('created_at')
+            ->get();
+
+            // Mark messages as read where the current user is the receiver
+            Message::where('sender_id', $userId)
+                ->where('receiver_id', $user->id)
+                ->where('is_read', false)
+                ->update(['is_read' => true]);
+
+            return response()->json($messages);
+        }
+
 
     // 3️⃣ Get users the current user has chatted with
-    public function getChatUsers()
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+   public function getChatUsers()
+{
+    /** @var User $user */
+    $user = Auth::user();
 
-        $chatUserIds = Message::where('sender_id', $user->id)
-            ->pluck('receiver_id')
-            ->merge(Message::where('receiver_id', $user->id)->pluck('sender_id'))
-            ->unique();
+    // Fetch all receiver IDs from sent messages and sender IDs from received messages
+    $chatUserIds = $user->sentMessages()->pluck('receiver_id')
+        ->merge($user->receivedMessages()->pluck('sender_id'))
+        ->unique()
+        ->values(); // reindex
 
-        $chatUsers = User::whereIn('id', $chatUserIds)->get();
+    // 🔹 Log the chat user IDs for debugging
+    Log::info('Chat user IDs: ', $chatUserIds->toArray());
 
-        return response()->json($chatUsers);
+    // Early return if no chat users
+    if ($chatUserIds->isEmpty()) {
+        Log::info('No chat users found for user ID: ' . $user->id);
+        return response()->json([]);
+    }
+
+    // Fetch chat users
+    $chatUsers = User::whereIn('id', $chatUserIds)->get();
+
+    // 🔹 Log the users fetched
+    Log::info('Chat users fetched: ', $chatUsers->pluck('id', 'username')->toArray());
+
+    // Attach unread message count for each chat user
+    $chatUsers = $chatUsers->map(function ($chatUser) use ($user) {
+        $unreadCount = Message::where('sender_id', $chatUser->id)
+            ->where('receiver_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+
+        $chatUser->unread_count = $unreadCount; // dynamically add property
+        Log::info("Unread count for user {$chatUser->id}: {$unreadCount}");
+        return $chatUser;
+    });
+
+    return response()->json($chatUsers);
+}
+
+
+
+    // 4️⃣ Search users by name or username for dropdown (excluding current user)
+    public function searchUsers(Request $request)
+    {   
+
+        // Get the currently logged-in user
+        $currentUser = $request->user();
+        if ($currentUser) {
+        } else {
+            return response()->json([], 401); // return empty array on unauthorized
+        }
+
+        $search = trim($request->query('search')); // query parameter from Retrofit
+
+        // Query users excluding the logged-in user
+        $query = User::with('photos')->where('id', '!=', $currentUser->id);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('fullname', 'like', "%$search%")
+                  ->orWhere('username', 'like', "%$search%");
+            });
+        }
+
+        $users = $query->get();
+
+        // Return as plain array for Retrofit
+        return response()->json($users);
     }
 }

@@ -71,7 +71,6 @@ class UserController extends Controller
 
     public function showProfile(Request $request)
     {
-        Log::info($request);
         $user = $request->user();
         if (!$user) {
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -376,43 +375,6 @@ class UserController extends Controller
 
         return response()->json(['success' => true]);
     }
-
-    // ------------------ New function ------------------
-    public function searchUsers(Request $request)
-{   
-    Log::info('Hit route!');
-    Log::info('--- searchUsers called ---');
-
-    // Get the currently logged-in user
-    $currentUser = $request->user();
-    if ($currentUser) {
-        Log::info('Current user:', ['id' => $currentUser->id, 'username' => $currentUser->username ?? 'N/A']);
-    } else {
-        Log::info('No authenticated user found.');
-        return response()->json([], 401); // return empty array on unauthorized
-    }
-
-    $search = $request->query('search'); // query parameter from Retrofit
-    Log::info('Search query:', ['search' => $search]);
-
-    // Query users excluding the logged-in user
-    $query = User::with('photos')->where('id', '!=', $currentUser->id);
-    Log::info('Initial query prepared (excluding current user)');
-
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('fullname', 'like', "%$search%")
-              ->orWhere('username', 'like', "%$search%");
-        });
-        Log::info('Search filter applied on query');
-    }
-
-    $users = $query->get();
-    Log::info('Users fetched:', ['count' => $users->count(), 'users' => $users->pluck('username')->toArray()]);
-
-    // Return as plain array for Retrofit
-    return response()->json($users);
-}
 
 
 
