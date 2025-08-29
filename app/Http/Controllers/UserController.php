@@ -426,53 +426,36 @@ class UserController extends Controller
     // Search users with filters
 public function search(Request $request)
 {
-    $currentUser = $request->user(); // logged-in user
+    $currentUser = $request->user();
     $currentUserId = $currentUser->id;
-    $search = $request->input('search');
-    $interests = $request->input('interests'); // comma separated
+    $search = $request->input('search'); // user input
 
-     // Filter: exclude self and only show opposite gender
-    $query = User::with('photos')
-        ->where('id', '!=', $currentUserId)
-        ->where('gender', $currentUser->gender === 'male' ? 'female' : 'male');
+    // Base query: exclude current user
+    $query = User::with('photos')->where('id', '!=', $currentUserId);
 
-    // Search by name or username
     if ($search) {
         $searchLower = strtolower($search);
+
         $query->where(function ($q) use ($searchLower) {
             $q->whereRaw('LOWER(fullname) LIKE ?', ["%$searchLower%"])
               ->orWhereRaw('LOWER(username) LIKE ?', ["%$searchLower%"])
-              ->orWhere(function ($qq) use ($searchLower) {
-                  // Search in interests array (case-insensitive)
-                  $qq->whereRaw("JSON_CONTAINS(LOWER(JSON_EXTRACT(interests, '$')), JSON_QUOTE(?))", [$searchLower]);
+              ->orWhere(function ($subQ) use ($searchLower) {
+                  // Match if any interest contains the search term
+                  $subQ->whereJsonContains('interests', $searchLower);
               });
-        });
-    }
-
-    // Filter by interests (case-insensitive)
-    if ($interests) {
-        $interestArray = array_map('trim', explode(',', $interests));
-
-        $query->where(function($q) use ($interestArray) {
-            foreach ($interestArray as $interest) {
-                $q->orWhereRaw("JSON_CONTAINS(LOWER(JSON_EXTRACT(interests, '$')), LOWER(JSON_QUOTE(?)))", [$interest]);
-            }
         });
     }
 
     $users = $query->get();
 
-    // Format response with is_verified
-    $response = $users->map(function($user) {
+    $response = $users->map(function ($user) {
         $interests = $user->interests;
         if ($interests && !is_array($interests)) {
             $decoded = json_decode($interests, true);
             $interests = is_array($decoded) ? $decoded : explode(',', $user->interests);
         }
 
-        $photos = $user->photos->map(function($photo){
-            return asset('storage/' . $photo->photo_path);
-        });
+        $photos = $user->photos->map(fn($photo) => asset('storage/' . $photo->photo_path));
 
         return [
             'id' => $user->id,
@@ -494,6 +477,7 @@ public function search(Request $request)
         'users' => $response
     ]);
 }
+
 
 
 public function getInterests()

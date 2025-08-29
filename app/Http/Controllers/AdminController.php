@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-<<<<<<< HEAD
-=======
 use App\Models\Matches;
->>>>>>> origin/hehe
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
@@ -20,10 +17,6 @@ class AdminController extends Controller
 
     public function login(Request $request)
     {
-<<<<<<< HEAD
-        dd($request);
-=======
->>>>>>> origin/hehe
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
@@ -38,24 +31,6 @@ class AdminController extends Controller
         return back()->withErrors(['email' => 'Invalid login credentials.']);
     }
 
-<<<<<<< HEAD
-    public function dashboard()
-    {
-        $users = User::all();
-        $totalUsers = User::count();
-        $newUsersToday = User::whereDate('created_at', Carbon::today())->count();
-
-        $dates = [];
-        $counts = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::today()->subDays($i)->format('Y-m-d');
-            $dates[] = $date;
-            $counts[] = User::whereDate('created_at', $date)->count();
-        }
-
-        return view('admin.dashboard', compact('users','totalUsers','newUsersToday','dates','counts'));
-    }
-=======
 
    public function dashboard()
 {
@@ -160,5 +135,4 @@ class AdminController extends Controller
 
 
 
->>>>>>> origin/hehe
 }

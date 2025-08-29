@@ -1,65 +1,15 @@
 <?php
 
 namespace App\Http\Controllers;
-<<<<<<< HEAD
-use App\Http\Controllers\Controller;
-use App\Models\Message;
-use Illuminate\Http\Request;
-=======
 
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
->>>>>>> origin/hehe
 use Illuminate\Support\Facades\Log;
 
 class MessageController extends Controller
 {
-<<<<<<< HEAD
-     // GET /api/messages/{otherUserId}
-    public function getMessages(Request $request, $otherUserId)
-    {
-        $currentUserId = (int) $request->header('X-User-Id', 0);
-        if (!$currentUserId) {
-            return response()->json(['error' => 'X-User-Id header missing'], 400);
-        }
-
-        $messages = Message::where(function ($q) use ($currentUserId, $otherUserId) {
-                $q->where('sender_id', $currentUserId)
-                  ->where('receiver_id', $otherUserId);
-            })
-            ->orWhere(function ($q) use ($currentUserId, $otherUserId) {
-                $q->where('sender_id', $otherUserId)
-                  ->where('receiver_id', $currentUserId);
-            })
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return response()->json($messages);
-    }
-
-    // POST /api/messages/{otherUserId}  (form field: message)
-    public function sendMessage(Request $request, $otherUserId)
-    {
-        $currentUserId = (int) $request->header('X-User-Id', 0);
-        if (!$currentUserId) {
-            return response()->json(['error' => 'X-User-Id header missing'], 400);
-        }
-
-        $request->validate(['message' => 'required|string']);
-
-        $msg = Message::create([
-            'sender_id'   => $currentUserId,
-            'receiver_id' => (int) $otherUserId,
-            'message'     => $request->message,
-            'user_id'     => $currentUserId
-        ]);
-
-        return response()->json($msg, 201);
-    }
-
-=======
     // 1️⃣ Send a message (with authentication)
     public function send(Request $request)
     {
@@ -160,32 +110,30 @@ class MessageController extends Controller
 
 
     // 4️⃣ Search users by name or username for dropdown (excluding current user)
-    public function searchUsers(Request $request)
-    {   
-
-        // Get the currently logged-in user
-        $currentUser = $request->user();
-        if ($currentUser) {
-        } else {
-            return response()->json([], 401); // return empty array on unauthorized
-        }
-
-        $search = trim($request->query('search')); // query parameter from Retrofit
-
-        // Query users excluding the logged-in user
-        $query = User::with('photos')->where('id', '!=', $currentUser->id);
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('fullname', 'like', "%$search%")
-                  ->orWhere('username', 'like', "%$search%");
-            });
-        }
-
-        $users = $query->get();
-
-        // Return as plain array for Retrofit
-        return response()->json($users);
+   public function searchUsers(Request $request)
+{
+    $currentUser = $request->user();
+    if (!$currentUser) {
+        return response()->json([], 401);
     }
->>>>>>> origin/hehe
+
+    $search = trim($request->query('search'));
+
+    $query = User::with('photos')->where('id', '!=', $currentUser->id);
+
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('fullname', 'like', "%$search%")
+              ->orWhere('username', 'like', "%$search%");
+        });
+    }
+
+    $users = $query->get()->map(function($user) {
+        $user->unread_count = 0; // replace with actual unread count if needed
+        return $user;
+    });
+
+    return response()->json($users);
+}
+    
 }
