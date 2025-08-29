@@ -12,7 +12,6 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\MatchesController;
 
 
-
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
@@ -47,7 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/{userId}', [MessageController::class, 'getMessages'])
         ->whereNumber('userId'); // ✅ Enforces numeric userId
 
-    // Get all users the current user has chatted with
+    // Get all users the current user has chatted with 
     Route::get('messages', [MessageController::class, 'getChatUsers']);
 
     // Search users by name/username (for the search dropdown)

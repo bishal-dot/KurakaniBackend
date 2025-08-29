@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Interest;
+use App\Models\Matches;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -22,6 +23,34 @@ class AdminUserController extends Controller
     // Active users (assuming 'status' column indicates active/inactive)
     $activeUsers = User::where('is_suspended', 'false')->count();
 
+    $matchesByUser = collect();
+    $allMatches = Matches::orderBy('created_at', 'desc')->get();
+
+    $processedPairs = []; // Track processed user pairs to avoid duplicate rows
+    $matchedCount = 0;
+    $pendingCount = 0;
+
+    foreach ($allMatches as $match) {
+        $pairKey = $match->user_id < $match->matched_user_id
+            ? $match->user_id . '_' . $match->matched_user_id
+            : $match->matched_user_id . '_' . $match->user_id;
+
+        if (in_array($pairKey, $processedPairs)) {
+            continue; // Skip duplicate pair
+        }
+
+        // Check if mutual match exists
+        $mutual = $allMatches->first(function($m) use ($match) {
+            return $m->user_id == $match->matched_user_id && $m->matched_user_id == $match->user_id;
+        });
+
+        // Count matches by status
+        if ($mutual) {
+            $matchedCount++;
+        } else {
+            $pendingCount++;
+        }
+
     // Male/female percentages
     $maleCount = User::where('gender', 'male')->count();
     $femaleCount = User::where('gender', 'female')->count();
@@ -37,8 +66,11 @@ class AdminUserController extends Controller
         'newUsersToday',
         'activeUsers',
         'malePercentage',
-        'femalePercentage'
+        'femalePercentage',
+        'matchedCount',
+        'pendingCount'
     ));
+}
 }
 
     // ✅ Show edit form for a single user

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+ 
 use Illuminate\Http\Request;
 use App\Models\Message;
 use App\Models\User;
@@ -77,20 +77,14 @@ class MessageController extends Controller
         ->unique()
         ->values(); // reindex
 
-    // 🔹 Log the chat user IDs for debugging
-    Log::info('Chat user IDs: ', $chatUserIds->toArray());
 
     // Early return if no chat users
     if ($chatUserIds->isEmpty()) {
-        Log::info('No chat users found for user ID: ' . $user->id);
         return response()->json([]);
     }
 
     // Fetch chat users
     $chatUsers = User::whereIn('id', $chatUserIds)->get();
-
-    // 🔹 Log the users fetched
-    Log::info('Chat users fetched: ', $chatUsers->pluck('id', 'username')->toArray());
 
     // Attach unread message count for each chat user
     $chatUsers = $chatUsers->map(function ($chatUser) use ($user) {
@@ -100,7 +94,6 @@ class MessageController extends Controller
             ->count();
 
         $chatUser->unread_count = $unreadCount; // dynamically add property
-        Log::info("Unread count for user {$chatUser->id}: {$unreadCount}");
         return $chatUser;
     });
 
@@ -112,7 +105,6 @@ class MessageController extends Controller
     // 4️⃣ Search users by name or username for dropdown (excluding current user)
     public function searchUsers(Request $request)
     {   
-
         // Get the currently logged-in user
         $currentUser = $request->user();
         if ($currentUser) {
