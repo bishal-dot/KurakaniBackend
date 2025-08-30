@@ -211,7 +211,9 @@
                             <td>{{ $user->gender }}</td>
                             <td>{{ $user->job }}</td>
                             <td>{{ $user->education }}</td>
-                            <td>{{ implode(', ', $user->interests) }}</td>
+                            <td>{{ is_array($user->interests)
+                                ? implode(', ', $user->interests)
+                                : $user->interests }}</td>
                             <td><span class="status {{ $user->is_suspended ? 'suspended' : 'active' }}">{{ $user->is_suspended ? 'Suspended' : 'Active' }}</span></td>
                             <td>
                                 <div class="action-icons">
